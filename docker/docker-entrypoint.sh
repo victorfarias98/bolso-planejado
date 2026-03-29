@@ -24,6 +24,11 @@ if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
     chmod 666 "$DB_DATABASE" || true
 fi
 
+# Limpa caches para evitar rotas/config antigas em deploys de PaaS
+if [ -f artisan ]; then
+    php artisan optimize:clear >/dev/null 2>&1 || true
+fi
+
 # Migrações com retry (MySQL pode ainda não aceitar conexões no primeiro segundo)
 if [ -f artisan ]; then
     i=0
