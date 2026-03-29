@@ -52,19 +52,12 @@ const routes = [
             {
                 path: 'investimentos',
                 name: 'investments',
-                meta: { requiresFeature: 'investments' },
                 component: () => import('../views/InvestmentsView.vue'),
             },
             {
                 path: 'recomendacoes',
                 name: 'recommendations',
-                meta: { requiresFeature: 'recommendations' },
                 component: () => import('../views/RecommendationsView.vue'),
-            },
-            {
-                path: 'assinatura',
-                name: 'billing',
-                component: () => import('../views/BillingView.vue'),
             },
         ],
     },
@@ -97,10 +90,7 @@ router.beforeEach(async (to) => {
         }
     }
 
-    const featureGate = to.matched.find((r) => r.meta.requiresFeature)?.meta.requiresFeature;
-    if (needAuth && featureGate && auth.user && ! auth.hasFeature(featureGate)) {
-        return { name: 'billing', query: { locked: String(featureGate) } };
-    }
+    // Billing/feature-gates temporariamente desativados
 });
 
 export default router;

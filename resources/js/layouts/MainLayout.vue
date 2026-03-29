@@ -130,7 +130,6 @@ const links = [
     { to: '/investimentos', name: 'investments', label: 'Investimentos', shortLabel: 'Invest.', icon: 'briefcase' },
     { to: '/contas', name: 'accounts', label: 'Contas', shortLabel: 'Contas', icon: 'bank' },
     { to: '/recorrencias', name: 'recurrence', label: 'Recorrências', shortLabel: 'Recorr.', icon: 'repeat' },
-    { to: '/assinatura', name: 'billing', label: 'Assinatura', shortLabel: 'Plano', icon: 'card' },
 ];
 
 const primaryLinks = links.slice(0, 4);

@@ -8,7 +8,6 @@ use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
 use App\Services\CategoryDefaultsService;
-use App\Services\EntitlementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request, CategoryDefaultsService $categoryDefaults, EntitlementService $entitlements): JsonResponse
+    public function register(RegisterRequest $request, CategoryDefaultsService $categoryDefaults): JsonResponse
     {
         $user = User::query()->create([
             'name' => $request->validated('name'),
