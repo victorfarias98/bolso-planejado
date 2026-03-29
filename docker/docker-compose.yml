@@ -1,0 +1,74 @@
+# Uso (na pasta docker/):
+#   docker compose up -d --build
+#
+# Aplicação: http://localhost:8080
+# MySQL host na máquina: localhost:3307
+#
+# O bind mount monta o código da raiz do projeto; rode na máquina host, se precisar:
+#   composer install && npm ci && npm run build
+# Ou remova o volume do serviço `app` para usar só o que foi copiado na imagem.
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: bolso-planejado-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+      MYSQL_DATABASE: ${DB_DATABASE:-divida_zero}
+      MYSQL_USER: ${DB_USERNAME:-divida_zero}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-divida_zero_secret}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootsecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 25s
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: bolso-planejado-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ..:/var/www/html
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-divida_zero}
+      DB_USERNAME: ${DB_USERNAME:-divida_zero}
+      DB_PASSWORD: ${DB_PASSWORD:-divida_zero_secret}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      CACHE_STORE: ${CACHE_STORE:-database}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    expose:
+      - "9000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: bolso-planejado-nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ..:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  mysql_data:
