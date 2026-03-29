@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureFeature;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'feature' => EnsureFeature::class,
         ]);
+        // Para API/SPA, guests devem receber 401 JSON (sem redireciono para rota web inexistente).
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
+            }
+
+            return '/app/login';
+        });
         // Confia em proxies (Render/LB) para respeitar X-Forwarded-Proto e gerar URLs HTTPS
         $middleware->trustProxies(at: '*');
     })
