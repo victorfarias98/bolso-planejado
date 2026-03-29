@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bolso Planejado — Caixa, dívidas e projeção num só painel | R$ 49,00 único</title>
     <meta name="description" content="Cadastre contas, lance entradas e saídas, acompanhe saldo e projeção, organize dívidas e gastos por categorias. Recomendações quando quiser ajustar o mês. R$ 49,00 uma vez, sem mensalidade.">
-    @vite(['resources/css/app.css', 'resources/js/landing.js'])
+    @vite(['resources/js/landing.js'])
     <style>
         html {
             scroll-behavior: smooth;
