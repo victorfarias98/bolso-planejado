@@ -9,6 +9,21 @@ if [ -z "${APP_KEY:-}" ]; then
     echo "APP_KEY gerada automaticamente para o container (defina APP_KEY no compose em produção)."
 fi
 
+# Se usar SQLite, aponte para caminho gravável no contêiner (ephemeral)
+if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
+    # Caminho default do Laravel ficaria em /var/www/html/database/database.sqlite (camada somente-leitura)
+    # Preferimos /tmp/database.sqlite no PaaS.
+    if [ -z "${DB_DATABASE:-}" ] || [ "${DB_DATABASE:-}" = "/var/www/html/database/database.sqlite" ] || [ "${DB_DATABASE:-}" = "database/database.sqlite" ]; then
+        export DB_DATABASE="/tmp/database.sqlite"
+    fi
+    if [ ! -f "$DB_DATABASE" ]; then
+        echo "Criando SQLite em $DB_DATABASE"
+        mkdir -p "$(dirname "$DB_DATABASE")"
+        touch "$DB_DATABASE"
+    fi
+    chmod 666 "$DB_DATABASE" || true
+fi
+
 # Migrações com retry (MySQL pode ainda não aceitar conexões no primeiro segundo)
 if [ -f artisan ]; then
     i=0
