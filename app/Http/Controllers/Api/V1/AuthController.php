@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Resources\Api\V1\UserResource;
-use App\Models\Plan;
 use App\Models\User;
 use App\Services\CategoryDefaultsService;
 use App\Services\EntitlementService;
@@ -19,17 +18,16 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request, CategoryDefaultsService $categoryDefaults, EntitlementService $entitlements): JsonResponse
     {
-        $freePlan = Plan::query()->where('slug', 'free')->first();
-
         $user = User::query()->create([
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
-            'plan_id' => $freePlan?->id,
+            // Temporariamente sem plano/assinatura
+            'plan_id' => null,
         ]);
 
         $categoryDefaults->ensureDefaultsForUser($user);
-        $entitlements->syncUserPlanSnapshot($user);
+        // Temporariamente desativado enquanto billing/subscriptions estiverem off
 
         $token = $user->createToken('api')->plainTextToken;
 
@@ -42,9 +40,38 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $user = User::query()->where('email', $request->validated('email'))->first();
+        $email = $request->validated('email');
+        $password = $request->validated('password');
 
-        if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
+        // Logins hardcoded temporários (admin e demo)
+        $adminEmail = env('ADMIN_EMAIL', 'admin@bolsoplanejado.local');
+        $adminPassword = env('ADMIN_PASSWORD', 'admin123');
+        $demoEmail = env('DEMO_EMAIL', 'demo@bolsoplanejado.local');
+        $demoPassword = env('DEMO_PASSWORD', 'demo123');
+
+        if ($email === $adminEmail && hash_equals($adminPassword, $password)) {
+            $user = User::query()->firstOrCreate(
+                ['email' => $adminEmail],
+                [
+                    'name' => 'Admin',
+                    'password' => bcrypt($adminPassword),
+                    'is_admin' => true,
+                ],
+            );
+        } elseif ($email === $demoEmail && hash_equals($demoPassword, $password)) {
+            $user = User::query()->firstOrCreate(
+                ['email' => $demoEmail],
+                [
+                    'name' => 'Demo',
+                    'password' => bcrypt($demoPassword),
+                    'is_admin' => false,
+                ],
+            );
+        } else {
+            $user = User::query()->where('email', $email)->first();
+        }
+
+        if (! $user || ! Hash::check($password, $user->password)) {
             return response()->json([
                 'message' => 'Credenciais inválidas.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);

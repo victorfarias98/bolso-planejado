@@ -15,15 +15,13 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $free = Plan::query()->where('slug', 'free')->first();
-
         User::query()->updateOrCreate(
-            ['email' => 'admin@dividazero.local'],
+            ['email' => env('ADMIN_EMAIL', 'admin@bolsoplanejado.local')],
             [
-                'name' => 'Administrador',
-                'password' => Hash::make('admin1234'),
+                'name' => 'Admin',
+                'password' => Hash::make(env('ADMIN_PASSWORD', 'admin123')),
                 'is_admin' => true,
-                'plan_id' => $free?->id,
+                'plan_id' => null,
             ]
         );
     }
