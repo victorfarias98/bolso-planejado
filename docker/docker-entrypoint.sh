@@ -3,6 +3,11 @@ set -e
 
 cd /var/www/html
 
+# Garante diretórios de escrita do Laravel mesmo em runtime read-only/parcial
+mkdir -p storage/logs bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R ug+rwx storage bootstrap/cache || true
+
 # Garante APP_KEY para artisan (Laravel)
 if [ -z "${APP_KEY:-}" ]; then
     export APP_KEY="base64:$(php -r "echo base64_encode(random_bytes(32));")"

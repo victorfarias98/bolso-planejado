@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     nginx \
     gettext-base \
+    libpq-dev \
     libicu-dev \
     libzip-dev \
     libfreetype6-dev \
@@ -51,6 +52,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install -j"$(nproc)" \
         intl \
         pdo_mysql \
+        pdo_pgsql \
         mbstring \
         exif \
         pcntl \

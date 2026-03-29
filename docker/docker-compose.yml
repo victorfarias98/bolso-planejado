@@ -2,28 +2,27 @@
 #   docker compose up -d --build
 #
 # Aplicação: http://localhost:8080
-# MySQL host na máquina: localhost:3307
+# PostgreSQL host na máquina: localhost:5433
 #
 # O bind mount monta o código da raiz do projeto; rode na máquina host, se precisar:
 #   composer install && npm ci && npm run build
 # Ou remova o volume do serviço `app` para usar só o que foi copiado na imagem.
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: bolso-planejado-mysql
+  postgres:
+    image: postgres:16-alpine
+    container_name: bolso-planejado-postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
-      MYSQL_DATABASE: ${DB_DATABASE:-divida_zero}
-      MYSQL_USER: ${DB_USERNAME:-divida_zero}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-divida_zero_secret}
+      POSTGRES_DB: ${DB_DATABASE:-divida_zero}
+      POSTGRES_USER: ${DB_USERNAME:-divida_zero}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-divida_zero_secret}
     ports:
-      - "${MYSQL_PORT:-3307}:3306"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootsecret"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-divida_zero} -d ${DB_DATABASE:-divida_zero}"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -43,9 +42,9 @@ services:
       APP_DEBUG: ${APP_DEBUG:-true}
       APP_KEY: ${APP_KEY:-}
       APP_URL: ${APP_URL:-http://localhost:8080}
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: 3306
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_DATABASE: ${DB_DATABASE:-divida_zero}
       DB_USERNAME: ${DB_USERNAME:-divida_zero}
       DB_PASSWORD: ${DB_PASSWORD:-divida_zero_secret}
@@ -53,7 +52,7 @@ services:
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
       CACHE_STORE: ${CACHE_STORE:-database}
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     expose:
       - "9000"
@@ -71,4 +70,4 @@ services:
       - app
 
 volumes:
-  mysql_data:
+  postgres_data:

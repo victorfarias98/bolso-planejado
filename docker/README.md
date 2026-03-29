@@ -5,7 +5,7 @@ Arquivos nesta pasta:
 | Arquivo | Função |
 |---------|--------|
 | `Dockerfile` | Imagem PHP 8.3-FPM + build Vite + Composer (multi-stage) |
-| `docker-compose.yml` | MySQL 8, PHP-FPM (`app`) e Nginx |
+| `docker-compose.yml` | PostgreSQL 16, PHP-FPM (`app`) e Nginx |
 | `nginx/default.conf` | Raiz em `public/`, FastCGI para `app:9000` |
 | `docker-entrypoint.sh` | `APP_KEY` opcional, `migrate --force` com retry |
 | `php/opcache.ini` | OpCache |
@@ -26,7 +26,7 @@ docker compose up -d --build
 ```
 
 - Site: **http://localhost:8080**
-- MySQL na máquina host: **localhost:3307** (usuário/senha padrão no `docker-compose.yml`)
+- PostgreSQL na máquina host: **localhost:5433** (usuário/senha padrão no `docker-compose.yml`)
 
 ### Primeira vez com bind mount
 
@@ -60,15 +60,15 @@ cd docker
 docker compose down
 ```
 
-Volumes nomeados (dados do MySQL) podem ser removidos com `docker compose down -v` (apaga o banco).
+Volumes nomeados (dados do PostgreSQL) podem ser removidos com `docker compose down -v` (apaga o banco).
 
 ## Produção (sem bind mount)
 
 Para usar **só a imagem** (sem montar o código do host), remova as seções `volumes` de `app` e `nginx` no `docker-compose` e publique a imagem em um registry. Nesse caso o `Dockerfile` já copia `vendor` e `public/build` para dentro da imagem.
 
-## Healthcheck do MySQL
+## Healthcheck do PostgreSQL
 
-O healthcheck usa senha de root padrão `rootsecret`. Se alterar `MYSQL_ROOT_PASSWORD`, ajuste também o comando `healthcheck` do serviço `mysql` para usar a mesma senha.
+O healthcheck usa `pg_isready` com `DB_USERNAME` e `DB_DATABASE`. Se alterar essas variáveis, o healthcheck acompanhará automaticamente.
 
 ## Troubleshooting
 
