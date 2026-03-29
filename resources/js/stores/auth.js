@@ -19,6 +19,45 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    function formatError(e, fallbackMessage = 'Ocorreu um erro. Tente novamente.') {
+        const status = e?.response?.status;
+        const data = e?.response?.data;
+        const errors = data?.errors;
+        if (status === 422) {
+            // Mensagens amigáveis por campo/regra mais comuns
+            const messages = [];
+            if (errors) {
+                const mapField = (field, arr) => {
+                    const joined = Array.isArray(arr) ? arr.join(' ') : String(arr);
+                    // Reescritas conhecidas
+                    if (field === 'email' && /unique/i.test(joined)) {
+                        return 'Este e-mail já está em uso.';
+                    }
+                    if (field === 'email') {
+                        return 'Informe um e-mail válido.';
+                    }
+                    if (field === 'password' && /confirmed/i.test(joined)) {
+                        return 'As senhas não conferem.';
+                    }
+                    if (field === 'password' && /min/i.test(joined)) {
+                        return 'A senha deve ter no mínimo 8 caracteres.';
+                    }
+                    if (field === 'name' && /required/i.test(joined)) {
+                        return 'Informe seu nome.';
+                    }
+                    return joined;
+                };
+                for (const [field, arr] of Object.entries(errors)) {
+                    messages.push(mapField(field, arr));
+                }
+                if (messages.length) return messages.join(' ');
+            }
+            // Fallback 422 sem details
+            return data?.message ?? fallbackMessage;
+        }
+        return data?.message ?? fallbackMessage;
+    }
+
     async function fetchMe() {
         if (! token.value) {
             return;
@@ -54,7 +93,12 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = data.user;
             return true;
         } catch (e) {
-            error.value = e.response?.data?.message ?? 'Não foi possível entrar.';
+            // Mensagem clara para credenciais inválidas
+            if (e?.response?.status === 422) {
+                error.value = 'E-mail ou senha inválidos.';
+            } else {
+                error.value = formatError(e, 'Não foi possível entrar.');
+            }
             return false;
         } finally {
             loading.value = false;
@@ -70,10 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = data.user;
             return true;
         } catch (e) {
-            const errs = e.response?.data?.errors;
-            error.value = errs
-                ? Object.values(errs).flat().join(' ')
-                : (e.response?.data?.message ?? 'Não foi possível cadastrar.');
+            error.value = formatError(e, 'Não foi possível cadastrar.');
             return false;
         } finally {
             loading.value = false;

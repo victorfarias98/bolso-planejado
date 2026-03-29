@@ -18,8 +18,9 @@ use App\Http\Controllers\Api\V1\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+    // Protege login e registro com rate limiting agressivo
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     // Route::get('billing/plans', [BillingController::class, 'plans']);
     // Route::post('billing/webhook', BillingWebhookController::class);
 
