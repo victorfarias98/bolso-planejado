@@ -33,6 +33,29 @@ export function useTransactions(toast) {
     const savingEdit = ref(false);
     const deleting = ref(false);
     const exportingPdf = ref(false);
+    async function baixarRelatorioPdf() {
+        exportingPdf.value = true;
+        try {
+            const { data } = await http.get('/reports/monthly', {
+                params: { month: month.value },
+                responseType: 'blob',
+            });
+            const blob = new Blob([data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio-mensal-${month.value}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            toast.error('Não foi possível gerar o PDF.');
+        } finally {
+            exportingPdf.value = false;
+        }
+    }
+
     const formError = ref('');
     const editError = ref('');
     const editingId = ref(null);
@@ -364,29 +387,6 @@ export function useTransactions(toast) {
             formError.value = errs ? Object.values(errs).flat().join(' ') : 'Erro ao salvar em massa.';
         } finally {
             saving.value = false;
-        }
-    }
-
-    async function baixarRelatorioPdf() {
-        exportingPdf.value = true;
-        try {
-            const { data } = await http.get('/reports/monthly', {
-                params: { month: month.value },
-                responseType: 'blob',
-            });
-            const blob = new Blob([data], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio-mensal-${month.value}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-        } catch {
-            toast.error('Não foi possível gerar o PDF.');
-        } finally {
-            exportingPdf.value = false;
         }
     }
 

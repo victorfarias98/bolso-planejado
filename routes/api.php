@@ -33,17 +33,17 @@ Route::prefix('v1')->group(function (): void {
         // Route::post('billing/checkout', [BillingController::class, 'checkout']);
 
         Route::get('projection', [ProjectionController::class, 'show']);
-        // Desativa recursos premium temporariamente
-        // Route::get('recommendations', [RecommendationController::class, 'index'])->middleware('feature:recommendations');
-        // Route::get('reports/monthly', MonthlyReportController::class)->middleware('feature:export_pdf');
+        // Recursos reativados sem dependência de plano/billing
+        Route::get('recommendations', [RecommendationController::class, 'index']);
+        Route::get('reports/monthly', MonthlyReportController::class);
 
         Route::apiResource('financial-accounts', FinancialAccountController::class);
         Route::apiResource('category-goals', CategoryGoalController::class)->except(['show']);
-        // Route::get('plan-histories', [PlanHistoryController::class, 'index']);
-        // Route::post('plan-histories', [PlanHistoryController::class, 'store']);
+        Route::get('plan-histories', [PlanHistoryController::class, 'index']);
+        Route::post('plan-histories', [PlanHistoryController::class, 'store']);
         Route::apiResource('transactions', TransactionController::class);
         Route::apiResource('recurrence-series', RecurrenceSeriesController::class);
         Route::apiResource('debts', DebtController::class);
-        // Route::apiResource('investments', InvestmentController::class)->middleware('feature:investments');
+        Route::apiResource('investments', InvestmentController::class);
     });
 });
