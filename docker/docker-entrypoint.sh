@@ -5,6 +5,7 @@ cd /var/www/html
 
 # Garante diretórios de escrita do Laravel mesmo em runtime read-only/parcial
 mkdir -p storage/logs bootstrap/cache
+touch storage/logs/laravel.log || true
 chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R ug+rwx storage bootstrap/cache || true
 
@@ -27,6 +28,15 @@ if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
         touch "$DB_DATABASE"
     fi
     chmod 666 "$DB_DATABASE" || true
+fi
+
+# Falha cedo com mensagem clara se PGSQL estiver configurado sem driver
+if [ "${DB_CONNECTION:-}" = "pgsql" ]; then
+    if ! php -m | grep -qi 'pdo_pgsql'; then
+        echo "ERRO: DB_CONNECTION=pgsql, mas a extensão pdo_pgsql não está carregada na imagem."
+        echo "Faça deploy com 'Clear build cache' no Render para reconstruir a imagem com pdo_pgsql."
+        exit 1
+    fi
 fi
 
 # Limpa caches para evitar rotas/config antigas em deploys de PaaS
