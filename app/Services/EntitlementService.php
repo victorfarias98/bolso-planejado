@@ -12,6 +12,20 @@ class EntitlementService
 {
     public function effectivePlan(User $user): Plan
     {
+        // Billing desativado: evita tocar na base de planos
+        if (filter_var(env('BILLING_DISABLED', true), FILTER_VALIDATE_BOOLEAN)) {
+            $p = new Plan();
+            $p->slug = 'free';
+            $p->name = 'Gratuito';
+            $p->billing_mode = PlanBillingMode::Free;
+            $p->price_cents = 0;
+            $p->currency = 'BRL';
+            $p->interval = null;
+            $p->active = true;
+
+            return $p;
+        }
+
         $subscription = $user->subscriptions()
             ->where('status', SubscriptionStatus::Active)
             ->where(function ($q): void {
@@ -51,6 +65,11 @@ class EntitlementService
      */
     public function entitlements(User $user): array
     {
+        // Billing desativado: sem recursos premium
+        if (filter_var(env('BILLING_DISABLED', true), FILTER_VALIDATE_BOOLEAN)) {
+            return [];
+        }
+
         $plan = $this->effectivePlan($user);
         $features = Feature::query()->orderBy('key')->get();
         $pivot = $plan->features()->get()->keyBy('id');
