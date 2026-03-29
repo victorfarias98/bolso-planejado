@@ -21,4 +21,16 @@ if [ -f artisan ]; then
     done
 fi
 
+# Se a variável PORT existir (ex.: Render), inicia Nginx + PHP-FPM no mesmo container
+if [ -n "${PORT:-}" ] && [ -f /etc/nginx/conf.d/default.conf.tpl ]; then
+    echo "Detectado ambiente com PORT=${PORT}; iniciando Nginx + PHP-FPM no mesmo container."
+    # Renderiza o template do Nginx com a porta dinâmica
+    envsubst '${PORT}' < /etc/nginx/conf.d/default.conf.tpl > /etc/nginx/conf.d/default.conf
+    # Inicia PHP-FPM em background
+    docker-php-entrypoint php-fpm -D
+    # Inicia Nginx em foreground
+    exec nginx -g 'daemon off;'
+fi
+
+# Fallback padrão: apenas PHP-FPM (para uso com Nginx externo no docker-compose)
 exec docker-php-entrypoint "$@"
