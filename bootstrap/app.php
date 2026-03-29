@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'feature' => EnsureFeature::class,
         ]);
+        // Confia em proxies (Render/LB) para respeitar X-Forwarded-Proto e gerar URLs HTTPS
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
